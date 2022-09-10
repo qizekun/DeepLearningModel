@@ -63,7 +63,7 @@ def train_model(model, train_loader, val_loader, test_loaders, epochs, net, devi
                 if save:
                     torch.save(net.state_dict(), save_path)
 
-            print('\ntime:%e' % t, f'\tlr:{lr}', f'\tbest_acc:{round(train_info["best_acc"], 3)}')
+            print(f'\ntime:{t}', '\tlr:%.2e' % lr, f'\tbest_acc:{round(train_info["best_acc"], 3)}')
 
             scheduler.step()  # 动态调整学习率
             train_info['all_val_accurate'].append(val_accurate / 100)

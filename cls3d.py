@@ -113,7 +113,7 @@ class Cls3d:
 
 if __name__ == '__main__':
     model = Cls3d(model='pct')
-    model.lr = 1e-3
+    model.lr = 5e-3
     model.batch_size = 64
     model.epochs = 200
     model.optimizer = 'radam'
