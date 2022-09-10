@@ -65,7 +65,11 @@ def train_model(model, train_loader, val_loader, test_loaders, epochs, net, devi
 
             print(f'\ntime:{t}', '\tlr:%.2e' % lr, f'\tbest_acc:{round(train_info["best_acc"], 3)}')
 
-            scheduler.step()  # 动态调整学习率
+            # 动态调整学习率
+            if isinstance(scheduler, torch.optim.lr_scheduler.ReduceLROnPlateau):
+                scheduler.step(val_accurate)
+            else:
+                scheduler.step()
             train_info['all_val_accurate'].append(val_accurate / 100)
             train_info['all_train_loss'].append(running_loss / len(train_loader))
             train_info['all_val_loss'].append(val_loss / len(val_loader))
