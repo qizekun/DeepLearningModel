@@ -54,16 +54,18 @@ def train_model(model, train_loader, val_loader, test_loaders, epochs, net, devi
             train_iter = iter(train_loader)
             epoch += 1
             lr = optimizer.state_dict()['param_groups'][0]['lr']
-            print('\n', time.perf_counter() - t, f'\tlr:{lr}', f'best_acc:{train_info["best_acc"]}')
+            t = round(time.perf_counter() - t, 3)
 
             val_loss, val_accurate = val_one_iter(net, val_loader, device, loss_function)
             if val_accurate > train_info['best_acc']:
-                train_info['best_acc'] = val_accurate
+                train_info['best_acc'] = float(val_accurate)
                 train_info['best_epoch'] = epoch
                 if save:
                     torch.save(net.state_dict(), save_path)
 
-            scheduler.step(val_accurate)  # 动态调整学习率
+            print(f'\ntime:{t}', f'\tlr:{lr}', f'\tbest_acc:{round(train_info["best_acc"], 3)}')
+
+            scheduler.step()  # 动态调整学习率
             train_info['all_val_accurate'].append(val_accurate / 100)
             train_info['all_train_loss'].append(running_loss / len(train_loader))
             train_info['all_val_loss'].append(val_loss / len(val_loader))

@@ -98,11 +98,11 @@ class Cls3d:
         else:
             optimizer = torch.optim.SGD(params, lr=self.lr, momentum=0.9, weight_decay=5e-4, nesterov=True)
 
-        # scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, self.epochs, eta_min=self.lr)
-        scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer, mode='max', factor=0.1,
-                                                               patience=4 if self.pretrain else 10,
-                                                               verbose=True, threshold=1e-3, min_lr=1e-6,
-                                                               cooldown=4 if self.pretrain else 10)
+        scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=10, eta_min=1e-6)
+        # scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer, mode='max', factor=0.1,
+        #                                                        patience=4 if self.pretrain else 10,
+        #                                                        verbose=True, threshold=1e-3, min_lr=1e-6,
+        #                                                        cooldown=4 if self.pretrain else 10)
 
         loss_function = nn.CrossEntropyLoss(label_smoothing=self.LabelSmoothing)
         save_path = f'{self.work_dir}/{self.model_name}.pth'
@@ -113,9 +113,10 @@ class Cls3d:
 
 if __name__ == '__main__':
     model = Cls3d(model='pct')
-    model.lr = 1e-2
+    model.lr = 1e-3
     model.batch_size = 64
     model.epochs = 200
+    model.optimizer = 'adamw'
     model.dataset = 'modelnet40'
     model.load_dataset(data_path='../../data/modelnet40')
     model.train()
