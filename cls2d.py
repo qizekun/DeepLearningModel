@@ -217,7 +217,7 @@ if __name__ == '__main__':
     model.gpu = "0"
     model.optimizer = 'radam'
     model.LabelSmoothing = 0.1
-    model.save = True
+    model.save = False
 
     model.dataset = 'flower'
     model.load_dataset('../../data/flower')

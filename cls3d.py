@@ -100,9 +100,9 @@ class Cls3d:
 
         # scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, self.epochs, eta_min=self.lr)
         scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer, mode='max', factor=0.1,
-                                                               patience=4 if self.pretrain else 20,
+                                                               patience=4 if self.pretrain else 10,
                                                                verbose=True, threshold=1e-3, min_lr=1e-6,
-                                                               cooldown=4 if self.pretrain else 20)
+                                                               cooldown=4 if self.pretrain else 10)
 
         loss_function = nn.CrossEntropyLoss(label_smoothing=self.LabelSmoothing)
         save_path = f'{self.work_dir}/{self.model_name}.pth'
