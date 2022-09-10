@@ -116,7 +116,7 @@ if __name__ == '__main__':
     model.lr = 1e-3
     model.batch_size = 64
     model.epochs = 200
-    model.optimizer = 'adamw'
+    model.optimizer = 'radam'
     model.dataset = 'modelnet40'
     model.load_dataset(data_path='../../data/modelnet40')
     model.train()
