@@ -2,12 +2,11 @@ import torch
 import torch.nn as nn
 from torch.utils.data import DataLoader
 from torchvision import transforms, datasets
-import json
 import os
 from module.PCT import Pct
 from data.ModelNet40 import ModelNet40
-from utils.tools import init_seed, AccuracyMeter, TenCropsTest, data_analysis, get_params
-from main import train_one_iter, val_one_iter, train_model
+from utils.tools import init_seed, get_params
+from main import train_model
 
 
 class Cls3d:
@@ -48,6 +47,7 @@ class Cls3d:
         self.loss_function = 'CrossEntropy'
         # 优化器
         self.optimizer = 'sgd'
+        self.scheduler = 'step'
         # device: GPU or CPU
         self.device = torch.device('cuda:0' if torch.cuda.is_available() else "cpu")
         # load pretrain
@@ -98,11 +98,13 @@ class Cls3d:
         else:
             optimizer = torch.optim.SGD(params, lr=self.lr, momentum=0.9, weight_decay=5e-4, nesterov=True)
 
-        scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=self.epochs, eta_min=1e-6)
-        # scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer, mode='max', factor=0.1,
-        #                                                           patience=4 if self.pretrain else 10,
-        #                                                           verbose=True, threshold=1e-3, min_lr=1e-6,
-        #                                                           cooldown=4 if self.pretrain else 10)
+        if self.scheduler == 'cos':
+            scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=self.epochs, eta_min=1e-6)
+        else:
+            scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer, mode='max', factor=0.1,
+                                                                   patience=4 if self.pretrain else 10,
+                                                                   verbose=True, threshold=1e-3, min_lr=1e-6,
+                                                                   cooldown=4 if self.pretrain else 10)
         loss_function = nn.CrossEntropyLoss(label_smoothing=self.LabelSmoothing)
         save_path = f'{self.work_dir}/{self.model_name}.pth'
         # 开始进行训练和测试
@@ -112,10 +114,11 @@ class Cls3d:
 
 if __name__ == '__main__':
     model = Cls3d(model='pct')
-    model.lr = 2e-3
-    model.batch_size = 64
-    model.epochs = 200
-    model.optimizer = 'radam'
+    model.lr = 1e-4
+    model.batch_size = 32
+    model.epochs = 250
+    model.optimizer = 'sgd'
+    model.scheduler = 'cos'
     model.dataset = 'modelnet40'
     model.load_dataset(data_path='../../data/modelnet40')
     model.train()

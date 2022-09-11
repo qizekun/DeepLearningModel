@@ -8,8 +8,8 @@ import json
 from PIL import Image
 from utils.transforms import get_transforms
 from module.backbone import ResNet50
-from utils.tools import init_seed, TenCropsTest, data_analysis, get_params
-from main import train_one_iter, val_one_iter, train_model
+from utils.tools import init_seed, TenCropsTest, get_params
+from main import train_model
 
 
 class Cls2d:
@@ -69,6 +69,7 @@ class Cls2d:
         self.loss_function = 'CrossEntropy'
         # 优化器
         self.optimizer = 'sgd'
+        self.scheduler = 'step'
         # device: GPU or CPU
         self.device = torch.device('cuda:0' if torch.cuda.is_available() else "cpu")
         # load pretrain
@@ -150,10 +151,13 @@ class Cls2d:
             optimizer = torch.optim.SGD(params, lr=self.lr, momentum=0.9, weight_decay=5e-4, nesterov=True)
 
         # scheduler
-        scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer, mode='max', factor=0.1,
-                                                               patience=4 if self.pretrain else 20,
-                                                               verbose=True, threshold=1e-3, min_lr=1e-6,
-                                                               cooldown=4 if self.pretrain else 20)
+        if self.scheduler == 'cos':
+            scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=self.epochs, eta_min=1e-6)
+        else:
+            scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer, mode='max', factor=0.1,
+                                                                   patience=4 if self.pretrain else 10,
+                                                                   verbose=True, threshold=1e-3, min_lr=1e-6,
+                                                                   cooldown=4 if self.pretrain else 10)
 
         # loss
         loss_function = nn.CrossEntropyLoss(label_smoothing=self.LabelSmoothing)
@@ -216,7 +220,8 @@ if __name__ == '__main__':
     model.pretrain = True
     model.gpu = "0"
     model.optimizer = 'radam'
-    model.LabelSmoothing = 0.1
+    model.scheduler = 'cos'
+    # model.LabelSmoothing = 0.1
     model.save = False
 
     model.dataset = 'flower'
