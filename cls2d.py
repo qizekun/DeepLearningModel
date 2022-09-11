@@ -131,7 +131,7 @@ class Cls2d:
         # dataloader
         train_loader = DataLoader(self.train_dataset, batch_size=self.batch_size,
                                   shuffle=True, num_workers=4, pin_memory=False)
-        val_loader = DataLoader(self.val_dataset, batch_size=self.batch_size,
+        val_loader = DataLoader(self.val_dataset, batch_size=8,
                                 shuffle=False, num_workers=4, pin_memory=False)
         test_loaders = {
             'test' + str(i):
@@ -213,14 +213,14 @@ if __name__ == '__main__':
     # deit3_small_patch16_224_in21ft1k
     # beit_base_patch16_224
 
-    model = Cls2d(model='resmlp_12_distilled_224')
+    model = Cls2d(model='vit_small_patch16_224_in21k')
     model.lr = 1e-4
     model.batch_size = 32
     model.epochs = 30
     model.pretrain = True
     model.gpu = "0"
     model.optimizer = 'radam'
-    model.scheduler = 'cos'
+    # model.scheduler = 'cos'
     # model.LabelSmoothing = 0.1
     model.save = False
 

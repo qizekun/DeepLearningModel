@@ -82,9 +82,9 @@ class Cls3d:
         init_seed(self.seed)
         if self.train_dataset is None or self.val_dataset is None:
             self.load_dataset(self.data_path)
-        train_loader = DataLoader(self.train_dataset, num_workers=4, batch_size=self.batch_size,
+        train_loader = DataLoader(self.train_dataset, num_workers=8, batch_size=self.batch_size,
                                   shuffle=True, drop_last=True)
-        val_loader = DataLoader(self.val_dataset, num_workers=4, batch_size=self.batch_size,
+        val_loader = DataLoader(self.val_dataset, num_workers=8, batch_size=8,
                                 shuffle=True, drop_last=False)
 
         self.net = self.create_model()
@@ -116,8 +116,8 @@ if __name__ == '__main__':
     model = Cls3d(model='pct')
     model.lr = 1e-4
     model.batch_size = 32
-    model.epochs = 250
-    model.optimizer = 'sgd'
+    model.epochs = 200
+    model.optimizer = 'adamw'
     model.scheduler = 'cos'
     model.dataset = 'modelnet40'
     model.load_dataset(data_path='../../data/modelnet40')
