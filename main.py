@@ -47,8 +47,8 @@ def train_model(model, train_loader, val_loader, test_loaders, epochs, net, devi
         running_loss += loss
         step += 1
         rate = step / train_len
-        a = "*" * int(rate * 60)
-        b = "." * int((1 - rate) * 60)
+        a = "*" * int(rate * 50)
+        b = "." * int((1 - rate) * 50)
         print("\rtraining: {:^3.0f}%[{}->{}]".format(int(rate * 100), a, b), end="")
 
         if iter_num % train_len == 0 and iter_num != 0:
@@ -77,7 +77,7 @@ def train_model(model, train_loader, val_loader, test_loaders, epochs, net, devi
             train_info['all_val_accurate'].append(val_accurate / 100)
             train_info['all_train_loss'].append(running_loss / len(train_loader))
             train_info['all_val_loss'].append(val_loss / len(val_loader))
-            print('[epoch %d] train_loss:%.3f  val_loss:%.3f  train_accurate:%.2f  val_accuracy:%.2f' %
+            print('[epoch %d] train_loss:%.3f  val_loss:%.3f  train_acc:%.2f  val_acc:%.2f' %
                   (epoch, running_loss / len(train_loader), val_loss / len(val_loader), train_accurate, val_accurate))
             train_info['epoch'] = epoch
             data_analysis(model)
