@@ -43,6 +43,8 @@ class Cls2d:
         self.gpu = '0'
         self.seed = 2022
 
+        self.layer = None
+
         # data info
         self.dataset = 'flower'
         self.data_path = 'flower'
@@ -111,7 +113,7 @@ class Cls2d:
         self.num_classes = len(cla_dict.keys())
 
     def create_model(self):
-        net = VisionTransformer(pretrained=self.pretrain, num_classes=self.num_classes, layer=None)
+        net = VisionTransformer(pretrained=self.pretrain, num_classes=self.num_classes, layer=self.layer)
         # net = timm.create_model(self.model_name, self.pretrain, checkpoint_path=self.pretrain_path,
         # num_classes=self.num_classes)
         if self.pretrain:
@@ -168,7 +170,7 @@ class Cls2d:
         save_path = f'{self.work_dir}/{self.model_name}.pth'
         # 开始进行训练和测试
         train_model(self, train_loader, val_loader, test_loaders, self.epochs, self.net, self.device, loss_function,
-                    optimizer, scheduler, self.train_info, self.save, save_path)
+                    optimizer, scheduler, self.train_info, self.save, save_path, False)
 
     def test(self):
         # 初始化随机种子
@@ -187,6 +189,7 @@ class Cls2d:
 
         test_acc = TenCropsTest(test_loaders, self.net)
         print(f'Finished Test! Test acc: {test_acc}')
+        return test_acc
 
     def inference(self, image_path):
         # 初始化随机种子
@@ -216,20 +219,35 @@ if __name__ == '__main__':
     # deit3_small_patch16_224_in21ft1k
     # beit_base_patch16_224
 
-    model = Cls2d(model='vit_base_patch16_224_in21k')
-    model.lr = 1e-4
-    model.batch_size = 32
-    model.epochs = 30
-    model.pretrain = True
-    model.gpu = "0"
-    model.optimizer = 'radam'
-    # model.scheduler = 'cos'
-    # model.LabelSmoothing = 0.1
-    model.save = False
+    seed_list = [1, 2, 3, 4, 5]
+    layer_list = [7, 5, 3, None]
 
-    model.dataset = 'cars'
-    model.load_dataset('../../data/cars')
-    model.train()
+    result = []
+    for layer in layer_list:
+        temp = []
+        for seed in seed_list:
+            model = Cls2d(model='vit_base_patch16_224_in21k')
+            model.lr = 1e-3
+            model.batch_size = 32
+            model.epochs = 30
+            model.pretrain = True
+            model.gpu = "0"
+            model.optimizer = 'sgd'
+            model.scheduler = 'cos'
+            # model.LabelSmoothing = 0.1
+            model.save = False
+
+            model.seed = seed
+            model.layer = layer
+
+            model.dataset = 'cars'
+            model.load_dataset('../../data/cars')
+            model.train()
+            temp.append(model.train_info['best_acc'])
+            print(temp)
+        temp.append(sum(temp) / len(temp))
+        result.append(temp)
+    print(result)
 
     # model.pretrain_path = 'work_dir/cls2d/flower/resmlp_12_distilled_224/resmlp_12_distilled_224.pth'
     # model.test()
