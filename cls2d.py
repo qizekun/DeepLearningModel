@@ -213,19 +213,19 @@ if __name__ == '__main__':
     # deit3_small_patch16_224_in21ft1k
     # beit_base_patch16_224
 
-    model = Cls2d(model='vit_small_patch16_224_in21k')
+    model = Cls2d(model='vit_base_patch16_224_in21k')
     model.lr = 1e-4
     model.batch_size = 32
     model.epochs = 30
     model.pretrain = True
     model.gpu = "0"
-    model.optimizer = 'radam'
-    # model.scheduler = 'cos'
+    model.optimizer = 'sgd'
+    model.scheduler = 'cos'
     # model.LabelSmoothing = 0.1
     model.save = False
 
-    model.dataset = 'flower'
-    model.load_dataset('../../data/flower')
+    model.dataset = 'cars'
+    model.load_dataset('../../data/cars')
     model.train()
 
     # model.pretrain_path = 'work_dir/cls2d/flower/resmlp_12_distilled_224/resmlp_12_distilled_224.pth'
