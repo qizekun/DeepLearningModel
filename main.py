@@ -36,8 +36,8 @@ def val_one_epoch(net, val_loader, device, loss_function):
 
 def train_model(model, train_loader, val_loader, test_loaders, epochs, net, device, loss_function, optimizer,
                 scheduler, train_info, save, save_path, test=True):
-    train_len = len(train_loader)
-    iter_nums = train_len * epochs
+    train_len = len(train_loader) - 1
+    iter_nums = train_len * (epochs + 1)
     running_loss = step = epoch = 0
     t = time.perf_counter()
     acc_meter = AccuracyMeter(topk=(1,))
@@ -87,5 +87,6 @@ def train_model(model, train_loader, val_loader, test_loaders, epochs, net, devi
             running_loss = step = 0
             t = time.perf_counter()
     if test:
+        print('\nStart testing...')
         test_acc = TenCropsTest(test_loaders, net)
         print(f'Finished Training! Test acc: {test_acc}')
