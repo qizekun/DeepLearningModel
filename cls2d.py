@@ -33,6 +33,8 @@ class Cls2d:
     def __init__(self):
 
         self.model_name = "resnet50"
+        self.net = None
+
         # parameter
         self.batch_size = 32
         self.lr = 1e-3
@@ -75,8 +77,6 @@ class Cls2d:
         # save model
         self.save = False
 
-        self.load_dataset(self.data_path)
-        self.net = self.create_model()
 
     def load_dataset(self, data_path='flowers'):
         self.data_path = data_path
@@ -160,10 +160,9 @@ class Cls2d:
     def test(self):
         # 初始化随机种子
         init_seed(self.seed)
+        self.net.eval()
         if self.test_dataset is None:
             self.load_dataset(self.data_path)
-        self.net = self.create_model()
-        self.net.to(self.device)
         test_loaders = {
             'test' + str(i):
                 torch.utils.data.DataLoader(
@@ -178,8 +177,6 @@ class Cls2d:
     def inference(self, image_path):
         # 初始化随机种子
         init_seed(self.seed)
-        self.net = self.create_model()
-        self.net.to(self.device)
         self.net.eval()
         image = Image.open(image_path).convert('RGB')
         inference_transform = transforms.Compose([
@@ -208,10 +205,18 @@ if __name__ == '__main__':
 
     model.dataset = 'cars'
     model.load_dataset('data/cars')
+    model.create_model()
     model.train()
 
+    # model = Cls2d()
     # model.ckpt_path = 'work_dir/cls2d/flowers/resmlp_12_distilled_224/resmlp_12_distilled_224.pth'
+    # model.load_dataset('data/flowers')
+    # model.create_model()
     # model.test()
+
+    # model = Cls2d()
+    # model.ckpt_path = 'work_dir/cls2d/flowers/resmlp_12_distilled_224/resmlp_12_distilled_224.pth'
+    # model.create_model()
     # feature, result = model.inference(image_path='data/flowers/val/daisy/5673728_71b8cb57eb.jpg')
     # print(feature)
     # print(result)

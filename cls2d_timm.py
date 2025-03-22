@@ -32,6 +32,7 @@ class Cls2d:
 
     def __init__(self, model):
         self.model_name = model
+        self.net = None
 
         # parameter
         self.batch_size = 32
@@ -76,9 +77,6 @@ class Cls2d:
         # save model
         self.save = False
 
-        self.load_dataset(self.data_path)
-        self.net = self.create_model_from_timm()
-
     def load_dataset(self, data_path='flowers'):
         self.data_path = data_path
         self.work_dir = f'{self.work_dir}/{self.dataset}/{self.model_name}'
@@ -121,7 +119,7 @@ class Cls2d:
             self.describe += f'pretrain'
         else:
             self.describe += 'scratch'
-        return net.to(self.device)
+        self.net = net.to(self.device)
 
     def train(self):
         # 初始化随机种子
@@ -169,11 +167,10 @@ class Cls2d:
     def test(self):
         # 初始化随机种子
         init_seed(self.seed)
+        self.net.eval()
         if self.test_dataset is None:
             self.load_dataset(self.data_path)
 
-        self.net = self.create_model_from_timm()
-        self.net.to(self.device)
         test_loaders = {
             'test' + str(i):
                 torch.utils.data.DataLoader(
@@ -188,8 +185,6 @@ class Cls2d:
     def inference(self, image_path):
         # 初始化随机种子
         init_seed(self.seed)
-        self.net = self.create_model_from_timm()
-        self.net.to(self.device)
         self.net.eval()
         image = Image.open(image_path).convert('RGB')
         inference_transform = transforms.Compose([
@@ -225,10 +220,18 @@ if __name__ == '__main__':
 
     model.dataset = 'cars'
     model.load_dataset('data/cars')
+    model.create_model_from_timm()
     model.train()
 
+    # model = Cls2d(model='vit_base_patch16_224_in21k')
     # model.ckpt_path = 'work_dir/cls2d/flowers/resmlp_12_distilled_224/resmlp_12_distilled_224.pth'
+    # model.load_dataset('data/flowers')
+    # model.create_model_from_timm()
     # model.test()
+
+    # model = Cls2d(model='vit_base_patch16_224_in21k')
+    # model.ckpt_path = 'work_dir/cls2d/flowers/resmlp_12_distilled_224/resmlp_12_distilled_224.pth'
+    # model.create_model_from_timm()
     # feature, result = model.inference(image_path='data/flowers/val/daisy/5673728_71b8cb57eb.jpg')
     # print(feature)
     # print(result)
