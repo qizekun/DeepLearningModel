@@ -114,7 +114,7 @@ class Cls2d:
         net = ResNet50(num_classes=self.num_classes)
         if self.ckpt_path != '':
             net.load_state_dict(torch.load(self.ckpt_path))
-        return net.to(self.device)
+        self.net = net.to(self.device)
 
     def train(self):
         # 初始化随机种子
