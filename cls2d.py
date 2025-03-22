@@ -6,7 +6,7 @@ import os
 import json
 from PIL import Image
 from utils.transforms import get_transforms
-from module.backbone import ResNet50
+from module.backbone import resnet50
 from utils.tools import init_seed, TenCropsTest, get_params
 from main import train_model
 
@@ -111,7 +111,7 @@ class Cls2d:
         self.num_classes = len(cla_dict.keys())
 
     def create_model(self):
-        net = ResNet50(num_classes=self.num_classes)
+        net = resnet50(num_classes=self.num_classes)
         if self.ckpt_path != '':
             net.load_state_dict(torch.load(self.ckpt_path))
         self.net = net.to(self.device)
