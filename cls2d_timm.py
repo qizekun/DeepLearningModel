@@ -185,7 +185,6 @@ class Cls2d:
     def inference(self, image_path):
         # 初始化随机种子
         init_seed(self.seed)
-        self.net.eval()
         image = Image.open(image_path).convert('RGB')
         inference_transform = transforms.Compose([
             transforms.Resize((self.crop_size, self.crop_size)),

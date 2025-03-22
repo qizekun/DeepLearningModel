@@ -159,7 +159,7 @@ def TenCropsTest(loader, net):
         val_len = len(loader['test0'])
         iter_val = [iter(loader['test' + str(i)]) for i in range(10)]
         for _ in trange(val_len):
-            data = [iter_val[j].next() for j in range(10)]
+            data = [next(iter_val[j]) for j in range(10)]
             inputs = [data[j][0] for j in range(10)]
             labels = data[0][1]
             for j in range(10):

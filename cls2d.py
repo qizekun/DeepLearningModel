@@ -160,7 +160,6 @@ class Cls2d:
     def test(self):
         # 初始化随机种子
         init_seed(self.seed)
-        self.net.eval()
         if self.test_dataset is None:
             self.load_dataset(self.data_path)
         test_loaders = {
@@ -196,7 +195,6 @@ if __name__ == '__main__':
     model.lr = 1e-3
     model.batch_size = 32
     model.epochs = 30
-    model.pretrain = True
     model.gpu = "0"
     model.optimizer = 'sgd'
     model.scheduler = 'cos'

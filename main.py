@@ -36,7 +36,7 @@ def val_one_epoch(net, val_loader, device, loss_function):
 
 def train_model(model, train_loader, val_loader, test_loaders, epochs, net, device, loss_function, optimizer,
                 scheduler, train_info, save, save_path, test=True):
-    train_len = len(train_loader) - 1
+    train_len = len(train_loader)
     iter_nums = train_len * epochs
     running_loss = step = epoch = 0
     t = time.perf_counter()
