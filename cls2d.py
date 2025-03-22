@@ -193,7 +193,7 @@ class Cls2d:
 if __name__ == '__main__':
 
     model = Cls2d()
-    model.lr = 1e-4
+    model.lr = 1e-3
     model.batch_size = 32
     model.epochs = 30
     model.pretrain = True
