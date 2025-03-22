@@ -42,6 +42,7 @@ def train_model(model, train_loader, val_loader, test_loaders, epochs, net, devi
     t = time.perf_counter()
     acc_meter = AccuracyMeter(topk=(1,))
     train_iter = iter(train_loader)
+
     for iter_num in range(iter_nums):
         loss = train_one_iter(net, train_iter, device, loss_function, optimizer, acc_meter)
         running_loss += loss
@@ -49,9 +50,9 @@ def train_model(model, train_loader, val_loader, test_loaders, epochs, net, devi
         rate = step / train_len
         a = "*" * int(rate * 50)
         b = "." * int((1 - rate) * 50)
-        print("\rtraining: {:^3.0f}%[{}->{}]".format(int(rate * 100), a, b), end="")
+        print("\r[epoch:{}]training: {:^3.0f}%[{}->{}]".format(epoch, int(rate * 100), a, b), end="")
 
-        # 每个epoch
+        # 每个epoch结束后进行eval
         if iter_num % train_len == 0 and iter_num != 0:
             train_iter = iter(train_loader)
             epoch += 1
@@ -76,8 +77,8 @@ def train_model(model, train_loader, val_loader, test_loaders, epochs, net, devi
             else:
                 scheduler.step()
             train_info['all_val_accurate'].append(val_accurate.cpu().numpy() / 100)
-            train_info['all_train_loss'].append(running_loss.cpu().numpy() / len(train_loader))
-            train_info['all_val_loss'].append(val_loss.cpu().numpy() / len(val_loader))
+            train_info['all_train_loss'].append(running_loss.detach().cpu().numpy() / len(train_loader))
+            train_info['all_val_loss'].append(val_loss.detach().cpu().numpy() / len(val_loader))
             print('[epoch %d] train_loss:%.3f  val_loss:%.3f  train_acc:%.2f  val_acc:%.2f' %
                   (epoch, running_loss / len(train_loader), val_loss / len(val_loader), train_accurate, val_accurate))
             train_info['epoch'] = epoch
