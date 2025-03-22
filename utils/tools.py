@@ -29,6 +29,7 @@ def query_params(query, parameters):
 
 def get_params(pretrain, net, lr):
     if pretrain:
+        # 对于预训练权重，backbone和fc head的学习率不同
         if hasattr(net, 'head'):
             params = [
                 {"params": filter(lambda p: p.requires_grad and not query_params(p, net.head.parameters()),

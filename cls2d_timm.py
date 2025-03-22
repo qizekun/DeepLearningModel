@@ -7,7 +7,6 @@ import os
 import json
 from PIL import Image
 from utils.transforms import get_transforms
-from module.visiontransformer import VisionTransformer
 from utils.tools import init_seed, TenCropsTest, get_params
 from main import train_model
 
@@ -33,7 +32,6 @@ class Cls2d:
 
     def __init__(self, model):
         self.model_name = model
-        self.net = None
 
         # parameter
         self.batch_size = 32
@@ -43,11 +41,9 @@ class Cls2d:
         self.gpu = '0'
         self.seed = 2022
 
-        self.layer = None
-
         # data info
-        self.dataset = 'flower'
-        self.data_path = 'flower'
+        self.dataset = 'flowers'
+        self.data_path = 'flowers'
         self.work_dir = 'work_dir/cls2d'
         self.train_dataset = None
         self.val_dataset = None
@@ -76,11 +72,14 @@ class Cls2d:
         self.device = torch.device('cuda:0' if torch.cuda.is_available() else "cpu")
         # load pretrain
         self.pretrain = False
-        self.pretrain_path = ''
+        self.ckpt_path = ''
         # save model
         self.save = False
 
-    def load_dataset(self, data_path='flower'):
+        self.load_dataset(self.data_path)
+        self.net = self.create_model_from_timm()
+
+    def load_dataset(self, data_path='flowers'):
         self.data_path = data_path
         self.work_dir = f'{self.work_dir}/{self.dataset}/{self.model_name}'
         os.makedirs(self.work_dir + '/csv/', exist_ok=True)
@@ -112,15 +111,14 @@ class Cls2d:
             json_file.write(json_str)
         self.num_classes = len(cla_dict.keys())
 
-    def create_model(self):
-        net = VisionTransformer(pretrained=self.pretrain, num_classes=self.num_classes, layer=self.layer)
-        # net = timm.create_model(self.model_name, self.pretrain, checkpoint_path=self.pretrain_path,
-        # num_classes=self.num_classes)
+    def create_model_from_timm(self):
+
+        net = timm.create_model(self.model_name, self.pretrain, num_classes=self.num_classes)
+        if self.ckpt_path != '':
+            net.load_state_dict(torch.load(self.ckpt_path))
+
         if self.pretrain:
-            if self.pretrain_path == '':
-                self.describe += f'pretrain_official'
-            else:
-                self.describe += f'pretrain_self'
+            self.describe += f'pretrain'
         else:
             self.describe += 'scratch'
         return net.to(self.device)
@@ -128,10 +126,6 @@ class Cls2d:
     def train(self):
         # 初始化随机种子
         init_seed(self.seed)
-        if self.train_dataset is None or self.val_dataset is None:
-            self.load_dataset(self.data_path)
-        self.net = self.create_model()
-        self.net.to(self.device)
 
         # dataloader
         train_loader = DataLoader(self.train_dataset, batch_size=self.batch_size,
@@ -147,7 +141,7 @@ class Cls2d:
         }
 
         # optimizer
-        params = get_params(self.pretrain, self.net, self.lr)
+        params = get_params(pretrain=self.pretrain, net=self.net, lr=self.lr)
         if self.optimizer == 'radam':
             optimizer = torch.optim.RAdam(params, lr=self.lr, weight_decay=5e-4)
         elif self.optimizer == 'adamw':
@@ -170,14 +164,15 @@ class Cls2d:
         save_path = f'{self.work_dir}/{self.model_name}.pth'
         # 开始进行训练和测试
         train_model(self, train_loader, val_loader, test_loaders, self.epochs, self.net, self.device, loss_function,
-                    optimizer, scheduler, self.train_info, self.save, save_path, False)
+                    optimizer, scheduler, self.train_info, self.save, save_path)
 
     def test(self):
         # 初始化随机种子
         init_seed(self.seed)
         if self.test_dataset is None:
             self.load_dataset(self.data_path)
-        self.net = self.create_model()
+
+        self.net = self.create_model_from_timm()
         self.net.to(self.device)
         test_loaders = {
             'test' + str(i):
@@ -189,12 +184,11 @@ class Cls2d:
 
         test_acc = TenCropsTest(test_loaders, self.net)
         print(f'Finished Test! Test acc: {test_acc}')
-        return test_acc
 
     def inference(self, image_path):
         # 初始化随机种子
         init_seed(self.seed)
-        self.net = self.create_model()
+        self.net = self.create_model_from_timm()
         self.net.to(self.device)
         self.net.eval()
         image = Image.open(image_path).convert('RGB')
@@ -212,45 +206,29 @@ class Cls2d:
 if __name__ == '__main__':
     # model list
     # timm.models.resmlp_12_distilled_224
-    # resnet50d
     # vit_small_patch16_224_in21k
     # vit_base_patch16_224_in21k
     # swinv2_base_window12to16_192to256_22kft1k
     # deit3_small_patch16_224_in21ft1k
     # beit_base_patch16_224
 
-    seed_list = [1, 2, 3, 4, 5]
-    layer_list = [7, 5, 3, None]
+    model = Cls2d(model='vit_base_patch16_224_in21k')
+    model.lr = 1e-4
+    model.batch_size = 32
+    model.epochs = 30
+    model.pretrain = True
+    model.gpu = "0"
+    model.optimizer = 'sgd'
+    model.scheduler = 'cos'
+    # model.LabelSmoothing = 0.1
+    model.save = False
 
-    result = []
-    for layer in layer_list:
-        temp = []
-        for seed in seed_list:
-            model = Cls2d(model='vit_base_patch16_224_in21k')
-            model.lr = 1e-3
-            model.batch_size = 32
-            model.epochs = 30
-            model.pretrain = True
-            model.gpu = "0"
-            model.optimizer = 'sgd'
-            model.scheduler = 'cos'
-            # model.LabelSmoothing = 0.1
-            model.save = False
+    model.dataset = 'cars'
+    model.load_dataset('data/cars')
+    model.train()
 
-            model.seed = seed
-            model.layer = layer
-
-            model.dataset = 'cars'
-            model.load_dataset('../../data/cars')
-            model.train()
-            temp.append(model.train_info['best_acc'])
-            print(temp)
-        temp.append(sum(temp) / len(temp))
-        result.append(temp)
-    print(result)
-
-    # model.pretrain_path = 'work_dir/cls2d/flower/resmlp_12_distilled_224/resmlp_12_distilled_224.pth'
+    # model.ckpt_path = 'work_dir/cls2d/flowers/resmlp_12_distilled_224/resmlp_12_distilled_224.pth'
     # model.test()
-    # feature, result = model.inference(image_path='../../data/flower/val/daisy/5673728_71b8cb57eb.jpg')
+    # feature, result = model.inference(image_path='data/flowers/val/daisy/5673728_71b8cb57eb.jpg')
     # print(feature)
     # print(result)

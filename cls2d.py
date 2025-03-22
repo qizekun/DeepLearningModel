@@ -1,4 +1,3 @@
-import timm
 import torch
 import torch.nn as nn
 from torchvision import transforms, datasets
@@ -22,7 +21,7 @@ class Cls2d:
             module : nn.module
         Example:
         --------
-            model = Cls2d(model='resnet')
+            model = Cls2d()
             model.lr = 1e-3
             model.batch_size = 16
             model.epochs = 500
@@ -31,10 +30,9 @@ class Cls2d:
             model.train()
     """
 
-    def __init__(self, model):
-        self.model_name = model
-        self.net = None
+    def __init__(self):
 
+        self.model_name = "resnet50"
         # parameter
         self.batch_size = 32
         self.lr = 1e-3
@@ -44,8 +42,8 @@ class Cls2d:
         self.seed = 2022
 
         # data info
-        self.dataset = 'flower'
-        self.data_path = 'flower'
+        self.dataset = 'flowers'
+        self.data_path = 'flowers'
         self.work_dir = 'work_dir/cls2d'
         self.train_dataset = None
         self.val_dataset = None
@@ -72,13 +70,15 @@ class Cls2d:
         self.scheduler = 'step'
         # device: GPU or CPU
         self.device = torch.device('cuda:0' if torch.cuda.is_available() else "cpu")
-        # load pretrain
-        self.pretrain = False
-        self.pretrain_path = ''
+        # load ckpt
+        self.ckpt_path = ''
         # save model
         self.save = False
 
-    def load_dataset(self, data_path='flower'):
+        self.load_dataset(self.data_path)
+        self.net = self.create_model()
+
+    def load_dataset(self, data_path='flowers'):
         self.data_path = data_path
         self.work_dir = f'{self.work_dir}/{self.dataset}/{self.model_name}'
         os.makedirs(self.work_dir + '/csv/', exist_ok=True)
@@ -111,22 +111,14 @@ class Cls2d:
         self.num_classes = len(cla_dict.keys())
 
     def create_model(self):
-        net = timm.create_model(self.model_name, self.pretrain, checkpoint_path=self.pretrain_path, num_classes=self.num_classes)
-        if self.pretrain:
-            if self.pretrain_path == '':
-                self.describe += f'pretrain_official'
-            else:
-                self.describe += f'pretrain_self'
-        else:
-            self.describe += 'scratch'
+        net = ResNet50(num_classes=self.num_classes)
+        if self.ckpt_path != '':
+            net.load_state_dict(torch.load(self.ckpt_path))
         return net.to(self.device)
 
     def train(self):
         # 初始化随机种子
         init_seed(self.seed)
-        if self.train_dataset is None or self.val_dataset is None:
-            self.load_dataset(self.data_path)
-        self.net = self.create_model()
 
         # dataloader
         train_loader = DataLoader(self.train_dataset, batch_size=self.batch_size,
@@ -142,7 +134,7 @@ class Cls2d:
         }
 
         # optimizer
-        params = get_params(self.pretrain, self.net, self.lr)
+        params = get_params(pretrain=False, net=self.net, lr=self.lr)
         if self.optimizer == 'radam':
             optimizer = torch.optim.RAdam(params, lr=self.lr, weight_decay=5e-4)
         elif self.optimizer == 'adamw':
@@ -154,10 +146,8 @@ class Cls2d:
         if self.scheduler == 'cos':
             scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=self.epochs, eta_min=1e-6)
         else:
-            scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer, mode='max', factor=0.1,
-                                                                   patience=4 if self.pretrain else 10,
-                                                                   verbose=True, threshold=1e-3, min_lr=1e-6,
-                                                                   cooldown=4 if self.pretrain else 10)
+            scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer, mode='max', factor=0.1, patience=10,
+                                                                   verbose=True, threshold=1e-3, min_lr=1e-6, cooldown=10)
 
         # loss
         loss_function = nn.CrossEntropyLoss(label_smoothing=self.LabelSmoothing)
@@ -204,16 +194,8 @@ class Cls2d:
 
 
 if __name__ == '__main__':
-    # model list
-    # timm.models.resmlp_12_distilled_224
-    # resnet50d
-    # vit_small_patch16_224_in21k
-    # vit_base_patch16_224_in21k
-    # swinv2_base_window12to16_192to256_22kft1k
-    # deit3_small_patch16_224_in21ft1k
-    # beit_base_patch16_224
 
-    model = Cls2d(model='vit_base_patch16_224_in21k')
+    model = Cls2d()
     model.lr = 1e-4
     model.batch_size = 32
     model.epochs = 30
@@ -225,11 +207,11 @@ if __name__ == '__main__':
     model.save = False
 
     model.dataset = 'cars'
-    model.load_dataset('../../data/cars')
+    model.load_dataset('data/cars')
     model.train()
 
-    # model.pretrain_path = 'work_dir/cls2d/flower/resmlp_12_distilled_224/resmlp_12_distilled_224.pth'
+    # model.ckpt_path = 'work_dir/cls2d/flowers/resmlp_12_distilled_224/resmlp_12_distilled_224.pth'
     # model.test()
-    # feature, result = model.inference(image_path='../../data/flower/val/daisy/5673728_71b8cb57eb.jpg')
+    # feature, result = model.inference(image_path='data/flowers/val/daisy/5673728_71b8cb57eb.jpg')
     # print(feature)
     # print(result)
