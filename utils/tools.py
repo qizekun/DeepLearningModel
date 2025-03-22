@@ -188,9 +188,9 @@ def data_analysis(model):
 
     plt.figure(figsize=(10, 6), dpi=244)
     plt.ylim((0, 1.2))
-    l1, = plt.plot(range(0, len(all_val_accurate)), all_val_accurate)
-    l2, = plt.plot(range(0, len(all_train_loss)), all_train_loss)
-    l3, = plt.plot(range(0, len(all_val_loss)), all_val_loss)
+    l1, = plt.plot(range(0, len(all_val_accurate)), all_val_accurate.cpu().numpy())
+    l2, = plt.plot(range(0, len(all_train_loss)), all_train_loss.cpu().numpy())
+    l3, = plt.plot(range(0, len(all_val_loss)), all_val_loss.cpu().numpy())
 
     columns = ['val_accurate', 'train_loss', 'val_loss']
     plt.legend(handles=[l1, l2, l3], labels=columns, loc='best')  # best表示自动分配最佳位置
